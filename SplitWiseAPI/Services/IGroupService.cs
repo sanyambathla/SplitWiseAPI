@@ -12,7 +12,6 @@ namespace SplitWiseAPI.Services
         Task<bool> AddUserToGroupAsync(Guid groupId, Guid userId);
         Task<bool> RemoveUserFromGroupAsync(Guid groupId, Guid userId);
         Task<List<GroupResponseDTO>> GetAllGroupsAsync();
-
-        Task<Group?> GetGroupByIdAsync(Guid groupId);
+        Task<GroupResponseDTO?> GetGroupByIdAsync(Guid groupId);
     }
 }

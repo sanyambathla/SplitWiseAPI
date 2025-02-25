@@ -16,23 +16,29 @@ namespace SplitWiseAPI.Services
 
         public async Task<ExpenseResponseDTO?> AddExpenseAsync(Guid groupId, ExpenseCreateDTO expenseDto)
         {
-            var group = await _context.Groups.Include(g => g.Expenses).FirstOrDefaultAsync(g => g.Id == groupId);
+            var group = await _context.Groups.FindAsync(groupId);
             if (group == null) return null;
 
             var paidByUser = await _context.Users.FindAsync(expenseDto.PaidByUserId);
             if (paidByUser == null) return null;
 
-            var splitUsers = await _context.Users.Where(u => expenseDto.SplitAmongUserIds.Contains(u.Id)).ToListAsync();
+            var splitUsers = await _context.Users
+                .Where(u => expenseDto.SplitAmongUserIds.Contains(u.Id))
+                .ToListAsync();
 
             var expense = new Expense
             {
                 Description = expenseDto.Description,
                 Amount = expenseDto.Amount,
+                PaidByUserId = paidByUser.Id,
                 PaidBy = paidByUser,
+                GroupId = group.Id,
+                Group = group,
                 SplitAmong = splitUsers
             };
 
-            group.Expenses.Add(expense);
+            // Add directly to Expenses DbSet
+            await _context.Expenses.AddAsync(expense);
             await _context.SaveChangesAsync();
 
             return new ExpenseResponseDTO(expense);

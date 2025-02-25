@@ -28,13 +28,27 @@ namespace SplitWiseAPI.Services
             };
         }
 
-        public async Task<Group?> GetGroupByIdAsync(Guid groupId)
+        public async Task<GroupResponseDTO?> GetGroupByIdAsync(Guid groupId)
         {
-            return await _context.Groups
+            var group = await _context.Groups
                 .Include(g => g.Users)
-                .Include(g => g.Expenses)
-                .FirstOrDefaultAsync(g => g.Id == groupId); // Fetch group with users & expenses
+                .Where(g => g.Id == groupId)
+                .Select(g => new GroupResponseDTO
+                {
+                    Id = g.Id,
+                    Name = g.Name,
+                    Users = g.Users.Select(u => new UserResponseDTO
+                    {
+                        Id = u.Id,
+                        Name = u.Name,
+                        Email = u.Email
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            return group;
         }
+
 
         public async Task<bool> AddUserToGroupAsync(Guid groupId, Guid userId)
         {
