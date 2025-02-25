@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SplitWiseAPI.DbContext;
+using SplitWiseAPI.DTOs;
 using SplitWiseAPI.Models;
 
 namespace SplitWiseAPI.Services
@@ -13,27 +14,40 @@ namespace SplitWiseAPI.Services
             _context = context;
         }
 
-        public async Task<Expense?> AddExpenseAsync(Guid groupId, Expense expense)
+        public async Task<ExpenseResponseDTO?> AddExpenseAsync(Guid groupId, ExpenseCreateDTO expenseDto)
         {
             var group = await _context.Groups.Include(g => g.Expenses).FirstOrDefaultAsync(g => g.Id == groupId);
             if (group == null) return null;
 
+            var paidByUser = await _context.Users.FindAsync(expenseDto.PaidByUserId);
+            if (paidByUser == null) return null;
+
+            var splitUsers = await _context.Users.Where(u => expenseDto.SplitAmongUserIds.Contains(u.Id)).ToListAsync();
+
+            var expense = new Expense
+            {
+                Description = expenseDto.Description,
+                Amount = expenseDto.Amount,
+                PaidBy = paidByUser,
+                SplitAmong = splitUsers
+            };
+
             group.Expenses.Add(expense);
             await _context.SaveChangesAsync();
-            return expense;
+
+            return new ExpenseResponseDTO(expense);
         }
 
-        public async Task<bool> UpdateExpenseAsync(Guid groupId, Expense expense)
+        public async Task<bool> UpdateExpenseAsync(Guid groupId, ExpenseUpdateDTO expenseDto)
         {
             var group = await _context.Groups.Include(g => g.Expenses).FirstOrDefaultAsync(g => g.Id == groupId);
-            var existingExpense = group?.Expenses.FirstOrDefault(e => e.Id == expense.Id);
-
+            var existingExpense = group?.Expenses.FirstOrDefault(e => e.Id == expenseDto.Id);
             if (existingExpense == null) return false;
 
-            existingExpense.Description = expense.Description;
-            existingExpense.Amount = expense.Amount;
-            existingExpense.PaidBy = expense.PaidBy;
-            existingExpense.SplitAmong = expense.SplitAmong;
+            existingExpense.Description = expenseDto.Description;
+            existingExpense.Amount = expenseDto.Amount;
+            existingExpense.PaidBy = await _context.Users.FindAsync(expenseDto.PaidByUserId);
+            existingExpense.SplitAmong = await _context.Users.Where(u => expenseDto.SplitAmongUserIds.Contains(u.Id)).ToListAsync();
 
             await _context.SaveChangesAsync();
             return true;

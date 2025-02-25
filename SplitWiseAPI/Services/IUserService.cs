@@ -1,12 +1,13 @@
-﻿using SplitWiseAPI.Models;
+﻿using SplitWiseAPI.DTOs;
+using SplitWiseAPI.Models;
 
 namespace SplitWiseAPI.Services
 {
     public interface IUserService
     {
-        Task<User> AddUserAsync(string name, string email);
-        Task<List<User>> GetAllUsersAsync();
+        Task<UserResponseDTO> AddUserAsync(UserCreateDTO userDto);
+        Task<List<UserResponseDTO>> GetAllUsersAsync();
         Task<bool> RemoveUserAsync(Guid userId);
-        Task<User?> GetUserByIdAsync(Guid userId);
+        Task<UserResponseDTO?> GetUserByIdAsync(Guid userId);
     }
 }

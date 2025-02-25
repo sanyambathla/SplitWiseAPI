@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SplitWiseAPI.DbContext;
 
@@ -11,9 +12,11 @@ using SplitWiseAPI.DbContext;
 namespace SplitWiseAPI.Migrations
 {
     [DbContext(typeof(SplitwiseDbContext))]
-    partial class SplitwiseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250225124616_AddUserGroupRelation")]
+    partial class AddUserGroupRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

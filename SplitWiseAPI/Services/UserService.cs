@@ -1,6 +1,7 @@
 ﻿using SplitWiseAPI.Models;
-using SplitWiseAPI.DbContext;  // Import your DbContext
+using SplitWiseAPI.DbContext;
 using Microsoft.EntityFrameworkCore;
+using SplitWiseAPI.DTOs;
 
 namespace SplitWiseAPI.Services
 {
@@ -10,12 +11,12 @@ namespace SplitWiseAPI.Services
 
         public UserService(SplitwiseDbContext context) => _context = context;
 
-        public async Task<User> AddUserAsync(string name, string email)
+        public async Task<UserResponseDTO> AddUserAsync(UserCreateDTO userDto)
         {
-            var user = new User { Name = name, Email = email };
-            _context.Users.Add(user);                 // Add to Users table
-            await _context.SaveChangesAsync();       // Save to database
-            return user;
+            var user = new User { Name = userDto.Name, Email = userDto.Email };
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return new UserResponseDTO(user);  // Map User to DTO
         }
 
         public async Task<bool> RemoveUserAsync(Guid userId)
@@ -24,16 +25,19 @@ namespace SplitWiseAPI.Services
             if (user == null) return false;
 
             _context.Users.Remove(user);
-            await _context.SaveChangesAsync();      // Commit removal
+            await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<List<User>> GetAllUsersAsync() =>
-            await _context.Users.ToListAsync();      // Fetch from DB
+        public async Task<List<UserResponseDTO>> GetAllUsersAsync() =>
+            await _context.Users
+                          .Select(u => new UserResponseDTO(u)) // Map each user to DTO
+                          .ToListAsync();
 
-        public async Task<User?> GetUserByIdAsync(Guid userId)
+        public async Task<UserResponseDTO?> GetUserByIdAsync(Guid userId)
         {
-            return await _context.Users.FindAsync(userId); // Assuming EF Core context
+            var user = await _context.Users.FindAsync(userId);
+            return user == null ? null : new UserResponseDTO(user); // Return DTO
         }
     }
 }

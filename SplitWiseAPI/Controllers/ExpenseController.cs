@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SplitWiseAPI.Models;
+using SplitWiseAPI.DTOs;
 using SplitWiseAPI.Services;
 
 namespace SplitWiseAPI.Controllers
@@ -12,22 +12,25 @@ namespace SplitWiseAPI.Controllers
 
         public ExpenseController(IExpenseService expenseService) => _expenseService = expenseService;
 
+        // ✅ Add Expense using ExpenseDTO
         [HttpPost("{groupId}/add")]
-        public async Task<IActionResult> AddExpense(Guid groupId, Expense expense)
+        public async Task<IActionResult> AddExpense(Guid groupId, ExpenseCreateDTO expenseDto)
         {
-            var addedExpense = await _expenseService.AddExpenseAsync(groupId, expense);
+            var addedExpense = await _expenseService.AddExpenseAsync(groupId, expenseDto);
             return addedExpense != null
                 ? CreatedAtAction(nameof(AddExpense), new { groupId, expenseId = addedExpense.Id }, addedExpense)
                 : NotFound("Group not found.");
         }
 
+        // 🔄 Update Expense using ExpenseUpdateDTO
         [HttpPut("{groupId}/update")]
-        public async Task<IActionResult> UpdateExpense(Guid groupId, Expense expense)
+        public async Task<IActionResult> UpdateExpense(Guid groupId, ExpenseUpdateDTO updateDto)
         {
-            var updated = await _expenseService.UpdateExpenseAsync(groupId, expense);
+            var updated = await _expenseService.UpdateExpenseAsync(groupId, updateDto);
             return updated ? Ok("Expense updated.") : NotFound("Expense or group not found.");
         }
 
+        // ❌ Delete Expense
         [HttpDelete("{groupId}/delete/{expenseId}")]
         public async Task<IActionResult> DeleteExpense(Guid groupId, Guid expenseId)
         {
@@ -35,11 +38,14 @@ namespace SplitWiseAPI.Controllers
             return deleted ? Ok("Expense deleted.") : NotFound("Expense not found.");
         }
 
+        // 📊 Calculate Settlement with SettlementResponseDTO
         [HttpGet("{groupId}/settlements")]
         public async Task<IActionResult> CalculateSettlement(Guid groupId)
         {
             var settlements = await _expenseService.CalculateSettlementAsync(groupId);
-            return settlements != null && settlements.Any() ? Ok(settlements) : NotFound("Group or expenses not found.");
+            return settlements != null && settlements.Any()
+                ? Ok(settlements.Select(s => new SettlementResponseDTO(s)))
+                : NotFound("Group or expenses not found.");
         }
     }
 }

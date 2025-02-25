@@ -34,6 +34,11 @@ namespace SplitWiseAPI.DbContext
                 .HasMany(e => e.SplitAmong)
                 .WithMany(u => u.ExpensesSplit)
                 .UsingEntity(j => j.ToTable("ExpenseSplit")); // Optional: custom join table name
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Groups)
+                .WithMany(g => g.Users)
+                .UsingEntity(j => j.ToTable("UserGroups"));
         }
     }
 }

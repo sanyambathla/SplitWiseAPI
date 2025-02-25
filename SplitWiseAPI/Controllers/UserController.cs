@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SplitWiseAPI.Models;
+using SplitWiseAPI.DTOs;
 using SplitWiseAPI.Services;
+using System.Linq;
 
 namespace SplitWiseAPI.Controllers
 {
@@ -13,17 +14,21 @@ namespace SplitWiseAPI.Controllers
         public UserController(IUserService userService) => _userService = userService;
 
         [HttpPost("add")]
-        public async Task<IActionResult> AddUser(User user)
+        public async Task<IActionResult> AddUser([FromBody] UserCreateDTO userDto)
         {
-            var newUser = await _userService.AddUserAsync(user.Name, user.Email);
-            return CreatedAtAction(nameof(AddUser), new { id = newUser.Id }, newUser); // 201 Created with location
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var userResponse = await _userService.AddUserAsync(userDto);
+
+            return CreatedAtAction(nameof(AddUser), new { id = userResponse.Id }, userResponse);
         }
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _userService.GetAllUsersAsync();
-            return Ok(users);
+            var response = await _userService.GetAllUsersAsync();
+
+            return Ok(response);
         }
 
         [HttpDelete("remove/{id}")]
